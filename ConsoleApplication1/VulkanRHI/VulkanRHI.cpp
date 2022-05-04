@@ -127,12 +127,20 @@ void SCVulkanRHI::init()
             VkResult device_create_res;
             if(b_graphics_family_queue_can_presentation || queue_family_index_presentation_to_use == 0xffffffff) //graphics queue family can present or there is no presentation queue family
             {
+                std::vector<const char*> device_extension_names;
+                uint32_t device_extension_count = 0;
+                if(queue_family_index_presentation_to_use != 0xffffffff)
+                {
+                    device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+                    device_extension_count = device_extension_names.size();
+                }
+
                 VkDeviceCreateInfo vk_device_create_info;
                 vk_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
                 vk_device_create_info.flags = 0;
                 vk_device_create_info.pNext = nullptr;
-                vk_device_create_info.enabledExtensionCount = 0;
-                vk_device_create_info.ppEnabledExtensionNames = nullptr;
+                vk_device_create_info.enabledExtensionCount = device_extension_count;
+                vk_device_create_info.ppEnabledExtensionNames = device_extension_names.data();
                 vk_device_create_info.enabledLayerCount = 0;
                 vk_device_create_info.ppEnabledLayerNames = nullptr;
                 vk_device_create_info.pEnabledFeatures = &vk_physical_device_features;
