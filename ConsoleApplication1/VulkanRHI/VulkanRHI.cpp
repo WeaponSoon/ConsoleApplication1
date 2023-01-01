@@ -4,6 +4,38 @@
 #include "GLFW/glfw3.h"
 
 
+void SCVulkanRHI::internal_uninit()
+{
+    if (m_status == SERHIStatus::Inited || m_status == SERHIStatus::InitFaild)
+    {
+        while (m_init_flag.test_and_set())
+        {
+        }
+        if ((m_status == SERHIStatus::Inited || m_status == SERHIStatus::InitFaild))
+        {
+            m_status = SERHIStatus::Uniniting;
+
+            if (m_device != VK_NULL_HANDLE)
+            {
+                vkDestroyDevice(m_device, m_memory);
+                m_device = VK_NULL_HANDLE;
+            }
+            if (m_instance != VK_NULL_HANDLE)
+            {
+                vkDestroyInstance(m_instance, m_memory);
+                m_instance = VK_NULL_HANDLE;
+            }
+            m_status = SERHIStatus::NotInit;
+        }
+        m_init_flag.clear();
+    }
+}
+
+SCVulkanRHI::~SCVulkanRHI()
+{
+    internal_uninit();
+}
+
 void SCVulkanRHI::init()
 {
     if(m_status == SERHIStatus::NotInit)
@@ -57,7 +89,7 @@ void SCVulkanRHI::init()
             physical_devices.resize(physical_device_count);
             vkEnumeratePhysicalDevices(m_instance, &physical_device_count, physical_devices.data());
 
-            VkPhysicalDevice physical_device_to_use = physical_devices[0];
+            physical_device_to_use = physical_devices[0];
 
             VkPhysicalDeviceProperties physical_device_properties;
             vkGetPhysicalDeviceProperties(physical_device_to_use, &physical_device_properties);
@@ -87,8 +119,8 @@ void SCVulkanRHI::init()
             VkSurfaceKHR surface_khr;
             glfwCreateWindowSurface(m_instance, window, m_memory, &surface_khr);
 
-            uint32_t queue_family_index_graphics_to_use;
-            uint32_t queue_family_index_presentation_to_use = 0xffffffff;
+            /*uint32_t queue_family_index_graphics_to_use;
+            uint32_t queue_family_index_presentation_to_use = 0xffffffff;*/
 
             bool b_graphics_family_queue_can_presentation = false;
             //most likely
@@ -119,10 +151,7 @@ void SCVulkanRHI::init()
                     }
                 }
             }
-            vkDestroySurfaceKHR(m_instance, surface_khr, m_memory);
-            glfwDestroyWindow(window);
-            surface_khr = VK_NULL_HANDLE;
-            window = nullptr;
+            
 
             VkResult device_create_res;
             if(b_graphics_family_queue_can_presentation || queue_family_index_presentation_to_use == 0xffffffff) //graphics queue family can present or there is no presentation queue family
@@ -199,6 +228,24 @@ void SCVulkanRHI::init()
                 vkGetDeviceQueue(m_device, queue_family_index_presentation_to_use, 0, &m_presentation_queue);
             }
 
+            VkSurfaceCapabilitiesKHR surface_capabilities;
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device_to_use, surface_khr, &surface_capabilities);
+            uint32_t surface_formats_count = 0;
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device_to_use, surface_khr, &surface_formats_count, nullptr);
+            std::vector<VkSurfaceFormatKHR> surface_formats;
+            surface_formats.resize(surface_formats_count);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device_to_use, surface_khr, &surface_formats_count, surface_formats.data());
+
+            uint32_t presentation_mode_count = 0;
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device_to_use, surface_khr, &presentation_mode_count, nullptr);
+            std::vector<VkPresentModeKHR> present_modes;
+            present_modes.resize(presentation_mode_count);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device_to_use, surface_khr, &presentation_mode_count, present_modes.data());
+
+            vkDestroySurfaceKHR(m_instance, surface_khr, m_memory);
+            glfwDestroyWindow(window);
+            surface_khr = VK_NULL_HANDLE;
+            window = nullptr;
             if(instance_res == VK_SUCCESS && device_create_res == VK_SUCCESS)
             {
                 m_status = SERHIStatus::Inited;
@@ -214,29 +261,7 @@ void SCVulkanRHI::init()
 
 void SCVulkanRHI::uninit()
 {
-    if(m_status == SERHIStatus::Inited || m_status == SERHIStatus::InitFaild)
-    {
-        while (m_init_flag.test_and_set())
-        {
-        }
-        if((m_status == SERHIStatus::Inited || m_status == SERHIStatus::InitFaild))
-        {
-            m_status = SERHIStatus::Uniniting;
-
-            if(m_device != VK_NULL_HANDLE)
-            {
-                vkDestroyDevice(m_device, m_memory);
-                m_device = VK_NULL_HANDLE;
-            }
-            if(m_instance != VK_NULL_HANDLE)
-            {
-                vkDestroyInstance(m_instance, m_memory);
-                m_instance = VK_NULL_HANDLE;
-            }
-            m_status = SERHIStatus::NotInit;
-        }
-        m_init_flag.clear();
-    }
+    internal_uninit();
 }
 
 SERHIStatus SCVulkanRHI::status() const

@@ -148,12 +148,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
+    <ClCompile Include="Core\RHI\RHIInterface.cpp" />
+    <ClCompile Include="Core\RHI\Surface.cpp" />
     <ClCompile Include="VulkanRHI\VulkanRHI.cpp" />
+    <ClCompile Include="VulkanRHI\VulkanSurface.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Core\CoreObject\Delegate.h" />
     <ClInclude Include="Core\CoreObject\SCObject.h" />
+    <ClInclude Include="Core\Display\Window\Window.h" />
     <ClInclude Include="Core\RHI\RHIInterface.h" />
+    <ClInclude Include="Core\RHI\Surface.h" />
     <ClInclude Include="VulkanRHI\VulkanRHI.h" />
+    <ClInclude Include="VulkanRHI\VulkanSurface.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

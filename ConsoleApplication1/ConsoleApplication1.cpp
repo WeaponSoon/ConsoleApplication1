@@ -6,7 +6,9 @@
 #include <vector>
 #include "Core/CoreObject/SCObject.h"
 #include "VulkanRHI/VulkanRHI.h"
+#include "VulkanRHI/VulkanSurface.h"
 #define GLFW_INCLUDE_VULKAN
+#include "Core/Display/Window/Window.h"
 #include "GLFW/glfw3.h"
 
 
@@ -42,11 +44,38 @@ void PtrTest()
     pObject_c = pTest1_a;
 }
 
+SSPtr<SCObject>& dsda()
+{
+	static SSPtr<SCObject> s;
+    return s;
+}
+
+
 int main()
 {
+    {
+        SSPtr<SCObject> la = SSPtr<SCObject>::construct<SCTest1>();
+        la = nullptr;
+    }
+    //dsda() = SSPtr<SCObject>::construct<SCObject>();
+    //注册全局状态
     SSPtr<SCRHIInterface> RHIInterface = SSPtr<SCRHIInterface>::construct<SCVulkanRHI>();
     RHIInterface->init();
-    RHIInterface->uninit();
+    RHIInterface->make_current();
+    SCSurface::get_surface_creator().bind([]()->SSPtr<SCSurface> {return SSPtr<SCSurface>::construct<SCVulkanSurface>(); });
 
+
+    SSPtr<SCWindow> Win = SSPtr<SCWindow>::construct<SCWindow>();
+    Win->init("hahaha", 500, 500);
+
+    while (Win->is_valid())
+    {
+        glfwPollEvents();
+    }
+
+    //销毁全局状态
+    RHIInterface->uninit();
+    RHIInterface->make_no_current();
+    RHIInterface = nullptr;
     std::cout << "Hello World!\n";
 }

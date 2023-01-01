@@ -25,6 +25,15 @@
     <Filter Include="VulkanRHI">
       <UniqueIdentifier>{e627053b-9347-452e-9278-59f881018dd9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Display">
+      <UniqueIdentifier>{20191366-e1ae-43a6-b6a2-3016ac8abe54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Display\Window">
+      <UniqueIdentifier>{35f60cce-c246-47ce-b762-1d89047d2e32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Display\Slates">
+      <UniqueIdentifier>{e881ab85-5054-4879-8e99-29089bf0592c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp">
@@ -32,6 +41,15 @@
     </ClCompile>
     <ClCompile Include="VulkanRHI\VulkanRHI.cpp">
       <Filter>VulkanRHI</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanRHI\VulkanSurface.cpp">
+      <Filter>VulkanRHI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHI\Surface.cpp">
+      <Filter>Core\RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHI\RHIInterface.cpp">
+      <Filter>Core\RHI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +61,18 @@
     </ClInclude>
     <ClInclude Include="VulkanRHI\VulkanRHI.h">
       <Filter>VulkanRHI</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanRHI\VulkanSurface.h">
+      <Filter>VulkanRHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\Surface.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Display\Window\Window.h">
+      <Filter>Core\Display\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CoreObject\Delegate.h">
+      <Filter>Core\CoreObject</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

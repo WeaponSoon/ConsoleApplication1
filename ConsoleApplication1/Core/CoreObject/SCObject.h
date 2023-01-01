@@ -73,6 +73,12 @@ public:
 	SSPtr(decltype(nullptr)) : impl(nullptr){}
 	SSPtr(const SSPtr<T>& Other) : impl(Other.impl) {}
 	SSPtr(SSPtr<T>&& Other) noexcept : impl(std::move(Other.impl)) {}
+
+	operator bool() const
+	{
+		return impl != nullptr;
+	}
+
 	SSPtr<T>& operator=(const SSPtr<T>& Other)
 	{
 		impl = Other.impl;
@@ -98,7 +104,9 @@ public:
 	template<typename Convertible, typename...ParamType>
 	static SSPtr<T> construct(ParamType...args)
 	{
-		return SSPtr<T>(new Convertible(args...));
+		SSPtr<T> ret;
+		ret.impl = std::dynamic_pointer_cast<T>(std::make_shared<Convertible>(args...));
+		return ret;
 	}
 
 	template<typename DynConvertible>
@@ -139,9 +147,11 @@ public:
 	{
 		return impl.get();
 	}
-private:
+
+	T* get_raw_ptr() const { return impl.get(); }
+
 	template<typename Convertable>
-	SSPtr(Convertable* Obj) : impl(Obj)
+	SSPtr(Convertable* Obj) : impl(std::dynamic_pointer_cast<T>(Obj->shared_from_this()))
 	{
 		static_assert(std::is_base_of<T, Convertable>::value || std::is_same<T, Convertable>::value, "T must be the base class of convertible");
 	}
