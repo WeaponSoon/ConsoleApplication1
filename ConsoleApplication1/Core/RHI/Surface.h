@@ -12,7 +12,7 @@ public:
 	SCDelegate<void, double /*xposIn*/, double /*yposIn*/> mouse_callback;
 	SCDelegate<void, int, int> pre_resize_callback;
 	SCDelegate<void, int, int> resize_callback;
-
+	SCDelegate<void> close_callback;
 
 	virtual void init(SSPtr<SCRHIInterface> rhi, uint32_t width, uint32_t height) = 0;
 	virtual void uninit() = 0;

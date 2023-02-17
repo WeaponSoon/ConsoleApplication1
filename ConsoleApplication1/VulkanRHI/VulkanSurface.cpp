@@ -39,6 +39,9 @@ void global_window_close(GLFWwindow* window)
 
 void SCVulkanSurface::onresize(uint32_t width, uint32_t height)
 {
+	while (m_init_flag.test_and_set())
+	{
+	}
 	if (pre_resize_callback)
 	{
 		pre_resize_callback(cur_width, cur_height);
@@ -46,7 +49,7 @@ void SCVulkanSurface::onresize(uint32_t width, uint32_t height)
 	cur_height = height;
 	cur_width = width;
 
-	//if (swapchain == VK_NULL_HANDLE)
+	if (width && height)
 	{
 
 
@@ -114,10 +117,18 @@ void SCVulkanSurface::onresize(uint32_t width, uint32_t height)
 	{
 		resize_callback(cur_width, cur_height);
 	}
+	m_init_flag.clear();
 }
 
 void SCVulkanSurface::internal_uninit()
 {
+	while (m_init_flag.test_and_set())
+	{
+	}
+	if(close_callback)
+	{
+		close_callback();
+	}
 	if (swapchain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(vulkan_rhi->get_device(), swapchain, vulkan_rhi->get_allocator());
@@ -128,6 +139,7 @@ void SCVulkanSurface::internal_uninit()
 		window = nullptr;
 	}
 	vulkan_rhi = nullptr;
+	m_init_flag.clear();
 }
 
 SCVulkanSurface::~SCVulkanSurface()

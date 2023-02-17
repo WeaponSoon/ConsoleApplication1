@@ -51,6 +51,9 @@
     <ClCompile Include="Core\RHI\RHIInterface.cpp">
       <Filter>Core\RHI</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Display\Window\Window.cpp">
+      <Filter>Core\Display\Window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\CoreObject\SCObject.h">

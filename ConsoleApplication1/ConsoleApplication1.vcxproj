@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
+    <ClCompile Include="Core\Display\Window\Window.cpp" />
     <ClCompile Include="Core\RHI\RHIInterface.cpp" />
     <ClCompile Include="Core\RHI\Surface.cpp" />
     <ClCompile Include="VulkanRHI\VulkanRHI.cpp" />

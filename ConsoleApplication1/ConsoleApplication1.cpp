@@ -51,6 +51,7 @@ SSPtr<SCObject>& dsda()
 }
 
 
+
 int main()
 {
     {
@@ -63,7 +64,7 @@ int main()
     RHIInterface->init();
     RHIInterface->make_current();
     SCSurface::get_surface_creator().bind([]()->SSPtr<SCSurface> {return SSPtr<SCSurface>::construct<SCVulkanSurface>(); });
-
+    
 
     SSPtr<SCWindow> Win = SSPtr<SCWindow>::construct<SCWindow>();
     Win->init("hahaha", 500, 500);
