@@ -9,7 +9,9 @@
 #include "VulkanRHI/VulkanSurface.h"
 #define GLFW_INCLUDE_VULKAN
 #include "Core/Display/Window/Window.h"
+#include "Core/RHI/RHITexture.h"
 #include "GLFW/glfw3.h"
+#include "VulkanRHI/VulkanTexture.h"
 
 
 class SCTest1 : public SCObject
@@ -63,8 +65,18 @@ int main()
     SSPtr<SCRHIInterface> RHIInterface = SSPtr<SCRHIInterface>::construct<SCVulkanRHI>();
     RHIInterface->init();
     RHIInterface->make_current();
-    SCSurface::get_surface_creator().bind([]()->SSPtr<SCSurface> {return SSPtr<SCSurface>::construct<SCVulkanSurface>(); });
-    
+    SCRHISurface::get_surface_creator().bind([]()->SSPtr<SCRHISurface> {return SSPtr<SCRHISurface>::construct<SCVulkanSurface>(); });
+
+    SSPtr<SCRHITexture2D> tt = SSPtr<SCRHITexture2D>::construct<SCVulkanTexture2D>();
+    SSRHITexture2DCreateInfo ttc;
+    ttc.inUsage = static_cast<SSTextureUsageFlags>(SERHITextureUsage::TU_SAMPLED_BIT | SERHITextureUsage::TU_TRANSFER_DST_BIT);
+    ttc.inPixelFormat = SERHIPixelFormat::PF_R8G8B8A8_SNORM;
+    ttc.inWidth = 512;
+    ttc.inHeight = 512;
+    ttc.inMipMapLevels = 1;
+    ttc.inSampleCount = 1;
+    ttc.inAccessType = SERHITextureAccessType::TAT_HOST_AND_DEVICE;
+    tt->init(RHIInterface, ttc);
 
     SSPtr<SCWindow> Win = SSPtr<SCWindow>::construct<SCWindow>();
     Win->init("hahaha", 500, 500);
@@ -73,7 +85,7 @@ int main()
     {
         glfwPollEvents();
     }
-
+    tt->release();
     //销毁全局状态
     RHIInterface->uninit();
     RHIInterface->make_no_current();

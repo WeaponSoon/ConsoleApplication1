@@ -1,9 +1,9 @@
 #pragma once
-#include "Core/RHI/Surface.h"
+#include "Core/RHI/RHISurface.h"
 #include "vulkan/vulkan.h"
 
 
-class SCVulkanSurface : public SCSurface
+class SCVulkanSurface : public SCRHISurface
 {
 private:
 

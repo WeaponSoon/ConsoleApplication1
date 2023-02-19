@@ -1,6 +1,7 @@
 #pragma once
 #include <istream>
 #include <memory>
+#include <mutex>
 
 #ifndef SM_DEBUG
 #ifdef _DEBUG
@@ -9,6 +10,94 @@
 #define SM_DEBUG 0
 #endif
 #endif
+
+typedef std::uint32_t SSEnumFlag;
+
+#define TRANSPARENT_MEMBER_TYPE(TypeName)\
+public:\
+TypeName() = default;\
+TypeName(const TypeName&) {}\
+TypeName(TypeName&&) noexcept {}\
+TypeName& operator=(const TypeName&) { return *this; }\
+TypeName& operator=( TypeName &&) noexcept { return *this; }\
+bool operator==(const TypeName&) const { return true; }\
+bool operator!=(const TypeName&) const { return false; }\
+~TypeName() = default;\
+private:
+
+
+#define NO_COPY_MEMBER_TYPE(TypeName)\
+public:\
+TypeName(const TypeName&) = delete;\
+TypeName(TypeName&&) noexcept  = delete;\
+TypeName& operator=(const TypeName&)  = delete;\
+TypeName& operator=( TypeName &&) noexcept = delete;\
+private:
+
+#define TRANSPARENT_MEMBER_TYPE_NO_DESTRUCTOR( TypeName )\
+public:\
+TypeName() = default;\
+TypeName(const TypeName&) {} \
+TypeName(TypeName&&) noexcept {} \
+TypeName& operator=(const TypeName&) { return *this; } \
+TypeName& operator=( TypeName &&) noexcept { return *this; } \
+bool operator==(const TypeName&) const { return true; } \
+bool operator!=(const TypeName&) const { return false; } \
+private:
+
+
+struct SSMutexLock
+{
+private:
+	mutable std::mutex mutex_;
+
+	TRANSPARENT_MEMBER_TYPE(SSMutexLock)
+
+public:
+	void lock() const
+	{
+		mutex_.lock();
+	}
+	void unlock() const
+	{
+		mutex_.unlock();
+	}
+};
+
+struct SSSpinLock
+{
+private:
+	mutable std::atomic_flag flag = ATOMIC_FLAG_INIT;
+
+	TRANSPARENT_MEMBER_TYPE(SSSpinLock)
+public:
+	void lock() const
+	{
+		while (flag.test_and_set()){}
+	}
+	void unlock() const
+	{
+		flag.clear();
+	}
+};
+template<typename T>
+struct SSScopeSpinLock
+{
+private:
+	const T* t;
+
+	NO_COPY_MEMBER_TYPE(SSScopeSpinLock)
+public:
+	SSScopeSpinLock(const T& inLock) : t(&inLock)
+	{
+		inLock.lock();
+	}
+
+	~SSScopeSpinLock()
+	{
+		t->unlock();
+	}
+};
 
 //template<typename T>
 class SCBase : public std::enable_shared_from_this<SCBase>

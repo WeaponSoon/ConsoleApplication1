@@ -1,12 +1,13 @@
 #pragma once
+#include "RHIResource.h"
 #include "Core/CoreObject/SCObject.h"
 #include "Core/RHI/RHIInterface.h"
 #include "Core/CoreObject/Delegate.h"
 
-class SCSurface : public SCObject
+class SCRHISurface : public SCRHIResource
 {
 public:
-	static SCDelegate<SSPtr<SCSurface>>& get_surface_creator();
+	static SCDelegate<SSPtr<SCRHISurface>>& get_surface_creator();
 
 	SCDelegate<void, int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/> key_callback;
 	SCDelegate<void, double /*xposIn*/, double /*yposIn*/> mouse_callback;

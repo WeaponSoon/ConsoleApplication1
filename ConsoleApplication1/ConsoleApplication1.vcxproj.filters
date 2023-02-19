@@ -45,7 +45,7 @@
     <ClCompile Include="VulkanRHI\VulkanSurface.cpp">
       <Filter>VulkanRHI</Filter>
     </ClCompile>
-    <ClCompile Include="Core\RHI\Surface.cpp">
+    <ClCompile Include="Core\RHI\RHISurface.cpp">
       <Filter>Core\RHI</Filter>
     </ClCompile>
     <ClCompile Include="Core\RHI\RHIInterface.cpp">
@@ -53,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="Core\Display\Window\Window.cpp">
       <Filter>Core\Display\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHI\RHIResource.cpp">
+      <Filter>Core\RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHI\RHITexture.cpp">
+      <Filter>Core\RHI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,7 +74,7 @@
     <ClInclude Include="VulkanRHI\VulkanSurface.h">
       <Filter>VulkanRHI</Filter>
     </ClInclude>
-    <ClInclude Include="Core\RHI\Surface.h">
+    <ClInclude Include="Core\RHI\RHISurface.h">
       <Filter>Core\RHI</Filter>
     </ClInclude>
     <ClInclude Include="Core\Display\Window\Window.h">
@@ -76,6 +82,18 @@
     </ClInclude>
     <ClInclude Include="Core\CoreObject\Delegate.h">
       <Filter>Core\CoreObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\RHIResource.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\RHITexture.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\RHITextureDefs.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanRHI\VulkanTexture.h">
+      <Filter>VulkanRHI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

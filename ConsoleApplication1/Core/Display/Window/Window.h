@@ -1,10 +1,10 @@
 #pragma once
-#include "Core/RHI/Surface.h"
+#include "Core/RHI/RHISurface.h"
 
 class SCWindow : public SCObject
 {
 private:
-	SSPtr<SCSurface> surface;
+	SSPtr<SCRHISurface> surface;
 
 
 	void internal_key_func(int key, int scancode, int action, int mods);
@@ -19,7 +19,7 @@ private:
 public:
 	SCWindow()
 	{
-		surface = SCSurface::get_surface_creator()();
+		surface = SCRHISurface::get_surface_creator()();
 
 	}
 
