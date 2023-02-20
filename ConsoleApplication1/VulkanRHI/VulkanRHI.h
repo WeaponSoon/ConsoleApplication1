@@ -14,6 +14,9 @@ private:
 	VkQueue m_graphics_queue = VK_NULL_HANDLE;
 	VkQueue m_presentation_queue = VK_NULL_HANDLE;
 
+	VkCommandPool m_graphics_command_pool = VK_NULL_HANDLE;
+	VkCommandPool m_present_command_pool = VK_NULL_HANDLE;
+
 	uint32_t queue_family_index_graphics_to_use = 0xffffffff;
 	uint32_t queue_family_index_presentation_to_use = 0xffffffff;
 

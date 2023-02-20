@@ -15,6 +15,20 @@ void SCVulkanRHI::internal_uninit()
         {
             m_status = SERHIStatus::Uniniting;
 
+            const bool b_should_destroy_present_pool = m_graphics_command_pool != m_present_command_pool;
+
+            if(m_graphics_command_pool != VK_NULL_HANDLE)
+            {
+                vkDestroyCommandPool(m_device, m_graphics_command_pool, m_memory);
+                m_graphics_command_pool = VK_NULL_HANDLE;
+            }
+
+            if(b_should_destroy_present_pool && m_present_command_pool != VK_NULL_HANDLE)
+            {
+                vkDestroyCommandPool(m_device, m_present_command_pool, m_memory);
+                m_present_command_pool = VK_NULL_HANDLE;
+            }
+
             if (m_device != VK_NULL_HANDLE)
             {
                 vkDestroyDevice(m_device, m_memory);
@@ -246,6 +260,32 @@ void SCVulkanRHI::init()
             glfwDestroyWindow(window);
             surface_khr = VK_NULL_HANDLE;
             window = nullptr;
+
+
+            VkCommandPoolCreateInfo graphics_command_pool_create_info{};
+            graphics_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            graphics_command_pool_create_info.flags = 0;
+            graphics_command_pool_create_info.pNext = nullptr;
+            graphics_command_pool_create_info.queueFamilyIndex = queue_family_index_graphics_to_use;
+
+            vkCreateCommandPool(m_device, &graphics_command_pool_create_info, m_memory, &m_graphics_command_pool);
+
+            if(!b_graphics_family_queue_can_presentation)
+            {
+                VkCommandPoolCreateInfo present_command_pool_create_info{};
+                present_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                present_command_pool_create_info.flags = 0;
+                present_command_pool_create_info.pNext = nullptr;
+                present_command_pool_create_info.queueFamilyIndex = queue_family_index_presentation_to_use;
+
+                vkCreateCommandPool(m_device, &present_command_pool_create_info, m_memory, &m_present_command_pool);
+            }
+            else
+            {
+                m_present_command_pool = m_graphics_command_pool;
+            }
+            
+
             if(instance_res == VK_SUCCESS && device_create_res == VK_SUCCESS)
             {
                 m_status = SERHIStatus::Inited;

@@ -215,6 +215,8 @@ public:
 		return *this;
 	}
 
+	
+	void make_ssptr_by_impl_internal_use_only(const SSPtr_Impl& in_impl) { impl = in_impl; }
 	const SSPtr_Impl& use_internal_only_ssptr_get_impl() const { return impl; }
 
 	~SSPtr() = default;
@@ -292,4 +294,67 @@ public:
 		static_assert(is_a_sc<T>::value && is_a_sc<Convertable>::value, "T must be a SCBase");
 		static_assert(std::is_base_of<T, Convertable>::value || std::is_same<T, Convertable>::value, "T must be the base class of convertible");
 	}
+};
+
+class A : public SCBase {};
+class B : public A{};
+
+template<typename T>
+struct SSWeakPtr final
+{
+private:
+	std::weak_ptr<T> impl;
+
+public:
+
+	SSPtr<T> lock() const
+	{
+		SSPtr<T> ret;
+		ret.make_ssptr_by_impl_internal_use_only(impl.lock());
+		return ret;
+	}
+
+	SSWeakPtr() noexcept : impl() {}
+	SSWeakPtr(decltype(nullptr)) noexcept: impl() {}
+	SSWeakPtr(const SSPtr<T>& Other) : impl(Other.use_internal_only_ssptr_get_impl()) {}
+
+	template<typename Convertable>
+	SSWeakPtr(const SSPtr<Convertable> Obj) : impl(std::static_pointer_cast<T>(Obj.use_internal_only_ssptr_get_impl()))
+	{
+		static_assert(is_a_sc<T>::value && is_a_sc<Convertable>::value, "T must be a SCBase");
+		static_assert(std::is_base_of<T, Convertable>::value || std::is_same<T, Convertable>::value, "T must be the base class of convertible");
+	}
+
+	SSWeakPtr(const SSWeakPtr<T>& other) : impl(other.impl) {}
+	SSWeakPtr(SSWeakPtr<T>&& Other) noexcept : impl(std::move(Other.impl)) {}
+
+
+
+	SSWeakPtr<T>& operator=(const SSPtr<T>& Other)
+	{
+		impl = Other.use_internal_only_ssptr_get_impl();
+		return *this;
+	}
+
+	template<typename Convertable>
+	SSWeakPtr<T>& operator=(const SSPtr<Convertable>& Other)
+	{
+		static_assert(std::is_base_of<T, Convertable>::value || std::is_same<T, Convertable>::value, "T must be the base class of convertible");
+		impl = std::static_pointer_cast<T>(Other.use_internal_only_ssptr_get_impl());
+		return *this;
+	}
+
+	SSWeakPtr<T>& operator=(const SSWeakPtr<T>& Other) noexcept
+	{
+		impl = (Other.impl);
+		return *this;
+	}
+	SSWeakPtr<T>& operator=(SSWeakPtr<T>&& Other) noexcept
+	{
+		impl = std::move(Other.impl);
+		return *this;
+	}
+
+
+
 };
