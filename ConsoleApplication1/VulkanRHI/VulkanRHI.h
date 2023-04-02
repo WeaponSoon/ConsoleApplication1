@@ -90,7 +90,7 @@ public:
 	void uninit() override;
 	SERHIStatus status() const override;
 
-	virtual SSPtr<SCRHICommandBuffer> allocate_command_buffer() override;
+	virtual SSPtr<SCRHICommandBuffer> allocate_command_buffer(SECommandBufferLifeType InLifeType) override;
 	void reset_command_buffer(SSPtr<SCRHICommandBuffer>& InBuffer) override;
 
 	VkInstance get_instance() { return m_instance; }

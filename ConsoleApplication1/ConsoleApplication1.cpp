@@ -67,7 +67,7 @@ int main()
     RHIInterface->make_current();
     SCRHISurface::get_surface_creator().bind([]()->SSPtr<SCRHISurface> {return SSPtr<SCRHISurface>::construct<SCVulkanSurface>(); });
 
-    auto TestCommandBuffer = RHIInterface->allocate_command_buffer();
+    auto TestCommandBuffer = RHIInterface->allocate_command_buffer(SECommandBufferLifeType::ExecuteMulti);
 
     TestCommandBuffer->begin_record();
     TestCommandBuffer->end_record();

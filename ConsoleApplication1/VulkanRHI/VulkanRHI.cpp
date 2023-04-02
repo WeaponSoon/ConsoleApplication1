@@ -152,7 +152,10 @@ void SCVulkanCommandBuffer::unint_internal()
     if(op)
     {
         auto&& loc_rhi = rhi.lock();
-        vkWaitForFences(loc_rhi->get_device(), 1, &m_fence->GetInnerFence(), VK_TRUE, 0xffffffffffffffffull);
+        if (get_status() == SECommandBufferStatus::Pending)
+        {
+            vkWaitForFences(loc_rhi->get_device(), 1, &m_fence->GetInnerFence(), VK_TRUE, 0xffffffffffffffffull);
+        }
         vkResetCommandBuffer(m_command_buffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
         m_command_buffer = VK_NULL_HANDLE;
         auto* top = op;
@@ -479,12 +482,12 @@ SERHIStatus SCVulkanRHI::status() const
     return m_status;
 }
 
-SSPtr<SCRHICommandBuffer> SCVulkanRHI::allocate_command_buffer()
+SSPtr<SCRHICommandBuffer> SCVulkanRHI::allocate_command_buffer(SECommandBufferLifeType InLifeType)
 {
     SSPtr<SCVulkanCommandBuffer> r = SSPtr<SCVulkanCommandBuffer>::construct<SCVulkanCommandBuffer>();
     r->it = m_command_buffers.emplace(m_command_buffers.end(), r);
     r->op = &m_command_buffers;
-    r->Init(SSPtr<SCRHIInterface>(this), SECommandBufferLifeType::ExecuteMulti);
+    r->Init(SSPtr<SCRHIInterface>(this), InLifeType);
 	SSPtr<SCRHICommandBuffer> ret = r;
     return ret;
 }

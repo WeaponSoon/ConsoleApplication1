@@ -176,6 +176,6 @@ public:
 	virtual void init() = 0;
 	virtual void uninit() = 0;
 
-	virtual SSPtr<SCRHICommandBuffer> allocate_command_buffer() = 0;
+	virtual SSPtr<SCRHICommandBuffer> allocate_command_buffer(SECommandBufferLifeType InLifeType) = 0;
 	virtual void reset_command_buffer(SSPtr<SCRHICommandBuffer>& InBuffer) = 0;
 };
