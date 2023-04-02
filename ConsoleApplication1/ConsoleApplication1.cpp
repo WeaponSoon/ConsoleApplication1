@@ -72,11 +72,9 @@ int main()
     TestCommandBuffer->begin_record();
     TestCommandBuffer->end_record();
     TestCommandBuffer->submit(std::vector<SSRHICommandBufferWaitInfo>(), std::vector<SSRHICommandBufferTriggerInfo>());
-    
     TestCommandBuffer->wait_until_finish();
 
     TestCommandBuffer->submit(std::vector<SSRHICommandBufferWaitInfo>(), std::vector<SSRHICommandBufferTriggerInfo>());
-
     TestCommandBuffer->wait_until_finish();
 
     SSPtr<SCRHITexture2D> tt = SSPtr<SCRHITexture2D>::construct<SCVulkanTexture2D>();
