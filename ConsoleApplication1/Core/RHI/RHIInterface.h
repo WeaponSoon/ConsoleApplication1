@@ -1,5 +1,8 @@
 #pragma once
 #include "Core/CoreObject/SCObject.h"
+#include "Core/RHI/RHIInterfaceDefs.h"
+
+class SCRHIInterface;
 
 enum class SERHIStatus
 {
@@ -27,6 +30,29 @@ enum class SECommandBufferLifeType
 	ExecuteMulti,
 };
 
+class SCRHIDeviceFence : public SCObject
+{
+public:
+	virtual bool IsReady() const = 0;
+	virtual void Reset() = 0;
+};
+
+class SCRHIDeviceSemaphore : public  SCObject
+{
+	
+};
+
+struct SSRHICommandBufferWaitInfo
+{
+	SERHIPipelineStageFlags m_flags;
+	SSPtr<SCRHIDeviceSemaphore> m_semaphore;
+};
+
+struct SSRHICommandBufferTriggerInfo
+{
+	SSPtr<SCRHIDeviceSemaphore> m_semaphore;
+};
+
 class SCRHICommand : public SCObject
 {
 public:
@@ -35,7 +61,9 @@ public:
 
 class SCRHICommandBuffer : public SCObject
 {
-private:
+protected:
+
+	SSPtr<SCRHIDeviceFence> Fence;
 
 	SSSpinLock record_command_lock;
 	SSSpinLock status_lock;
@@ -43,9 +71,27 @@ private:
 	std::vector<SSPtr<SCRHICommand>> all_command;
 	SECommandBufferStatus command_buffer_status = SECommandBufferStatus::Invalid;
 	SECommandBufferLifeType command_buffer_life = SECommandBufferLifeType::ExecuteMulti;
+
+protected:
+
+	void CheckStatus()
+	{
+		if (command_buffer_status == SECommandBufferStatus::Pending)
+		{
+			if (Fence->IsReady())
+			{
+				Fence->Reset();
+				command_buffer_status = get_command_buffer_life() == SECommandBufferLifeType::ExecuteMulti ? SECommandBufferStatus::Executable : SECommandBufferStatus::Invalid;
+			}
+		}
+	}
+
 public:
+
+
 	SECommandBufferStatus get_status() const
 	{
+		const_cast<SCRHICommandBuffer*>(this)->CheckStatus();
 		return command_buffer_status;
 	}
 	SECommandBufferLifeType get_command_buffer_life() const
@@ -77,9 +123,22 @@ public:
 		}
 		on_end_record();
 		command_buffer_status = SECommandBufferStatus::Executable;
-		return false;
+		return true;
 	}
 	virtual void on_end_record() = 0;
+
+	bool submit(const std::vector<SSRHICommandBufferWaitInfo>& InWaitInfo, const std::vector<SSRHICommandBufferTriggerInfo>& InTriggerInfo)
+	{
+		SSScopeSpinLock guard(status_lock);
+		if(command_buffer_status != SECommandBufferStatus::Executable)
+		{
+			return false;
+		}
+		on_submit(InWaitInfo, InTriggerInfo);
+		command_buffer_status = SECommandBufferStatus::Pending;
+		return true;
+	}
+	virtual void on_submit(const std::vector<SSRHICommandBufferWaitInfo>& InWaitInfo, const std::vector<SSRHICommandBufferTriggerInfo>& InTriggerInfo) = 0;
 
 
 	bool record_command(const SSPtr<SCRHICommand>& in_command)
@@ -93,8 +152,9 @@ public:
 		all_command.push_back(in_command);
 		return true;
 	}
-	
-	
+
+	virtual void wait_until_finish(uint64_t InOutTime = 0xffffffffffffffffull) = 0;
+
 };
 
 
@@ -116,5 +176,6 @@ public:
 	virtual void init() = 0;
 	virtual void uninit() = 0;
 
-	//virtual SSPtr<SCRHICommandBuffer> get_command_buffer() = 0;
+	virtual SSPtr<SCRHICommandBuffer> allocate_command_buffer() = 0;
+	virtual void reset_command_buffer(SSPtr<SCRHICommandBuffer>& InBuffer) = 0;
 };

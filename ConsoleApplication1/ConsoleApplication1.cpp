@@ -67,6 +67,18 @@ int main()
     RHIInterface->make_current();
     SCRHISurface::get_surface_creator().bind([]()->SSPtr<SCRHISurface> {return SSPtr<SCRHISurface>::construct<SCVulkanSurface>(); });
 
+    auto TestCommandBuffer = RHIInterface->allocate_command_buffer();
+
+    TestCommandBuffer->begin_record();
+    TestCommandBuffer->end_record();
+    TestCommandBuffer->submit(std::vector<SSRHICommandBufferWaitInfo>(), std::vector<SSRHICommandBufferTriggerInfo>());
+    
+    TestCommandBuffer->wait_until_finish();
+
+    TestCommandBuffer->submit(std::vector<SSRHICommandBufferWaitInfo>(), std::vector<SSRHICommandBufferTriggerInfo>());
+
+    TestCommandBuffer->wait_until_finish();
+
     SSPtr<SCRHITexture2D> tt = SSPtr<SCRHITexture2D>::construct<SCVulkanTexture2D>();
     SSRHITexture2DCreateInfo ttc;
     ttc.inUsage = static_cast<SSTextureUsageFlags>(SERHITextureUsage::TU_SAMPLED_BIT | SERHITextureUsage::TU_TRANSFER_DST_BIT);

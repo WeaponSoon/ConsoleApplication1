@@ -95,5 +95,8 @@
     <ClInclude Include="VulkanRHI\VulkanTexture.h">
       <Filter>VulkanRHI</Filter>
     </ClInclude>
+    <ClInclude Include="Core\RHI\RHIInterfaceDefs.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -161,6 +161,7 @@
     <ClInclude Include="Core\CoreObject\SCObject.h" />
     <ClInclude Include="Core\Display\Window\Window.h" />
     <ClInclude Include="Core\RHI\RHIInterface.h" />
+    <ClInclude Include="Core\RHI\RHIInterfaceDefs.h" />
     <ClInclude Include="Core\RHI\RHITextureDefs.h" />
     <ClInclude Include="Core\RHI\RHIResource.h" />
     <ClInclude Include="Core\RHI\RHISurface.h" />

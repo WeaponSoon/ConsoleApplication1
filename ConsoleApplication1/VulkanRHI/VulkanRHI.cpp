@@ -1,8 +1,169 @@
 #include "VulkanRHI.h"
 #include "vector"
 #define GLFW_INCLUDE_VULKAN
+#include <iostream>
+
 #include "GLFW/glfw3.h"
 
+
+SCRHIVulkanDeviceFence::SCRHIVulkanDeviceFence(SSPtr<SCRHIInterface> InRhi)
+{
+    rhi = InRhi.as<SCVulkanRHI>();
+    VkFenceCreateInfo fence_create{};
+    fence_create.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_create.pNext = nullptr;
+    fence_create.flags = 0;
+    vkCreateFence(rhi->get_device(), &fence_create, rhi->get_allocator(), &m_fence);
+}
+
+SCRHIVulkanDeviceFence::~SCRHIVulkanDeviceFence()
+{
+    vkDestroyFence(rhi->get_device(), m_fence, rhi->get_allocator());
+}
+
+bool SCRHIVulkanDeviceFence::IsReady() const
+{
+     return vkGetFenceStatus(rhi->get_device(), m_fence) == VK_SUCCESS;
+}
+
+void SCRHIVulkanDeviceFence::Reset()
+{
+    vkResetFences(rhi->get_device(), 1, &m_fence);
+}
+
+SCRHIVulkanDeviceSemaphore::SCRHIVulkanDeviceSemaphore(SSPtr<SCRHIInterface> InRhi)
+{
+    rhi = InRhi.as<SCVulkanRHI>();
+    VkSemaphoreCreateInfo info;
+    info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    info.flags = 0;
+    info.pNext = nullptr;
+    vkCreateSemaphore(rhi->get_device(), &info, rhi->get_allocator(), &m_semaphore);
+}
+
+SCRHIVulkanDeviceSemaphore::~SCRHIVulkanDeviceSemaphore()
+{
+    vkDestroySemaphore(rhi->get_device(), m_semaphore, rhi->get_allocator());
+}
+
+void SCVulkanCommandBuffer::Init(const SSPtr<SCRHIInterface>& InRhi, SECommandBufferLifeType InLifeType)
+{
+    m_fence = SSPtr<SCRHIVulkanDeviceFence>::construct<SCRHIVulkanDeviceFence>(InRhi);
+    Fence = m_fence;
+    command_buffer_life = InLifeType;
+    rhi = InRhi.as<SCVulkanRHI>();
+    auto&& loc_rhi = rhi.lock();
+    VkCommandBufferAllocateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    info.pNext = nullptr;
+    info.commandBufferCount = 1;
+    info.commandPool = loc_rhi->get_graphics_pool();
+    info.level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+    if(vkAllocateCommandBuffers(loc_rhi->get_device(), &info, &m_command_buffer) == VK_SUCCESS)
+    {
+        command_buffer_status = SECommandBufferStatus::Initial;
+    }
+}
+
+void SCVulkanCommandBuffer::on_begin_record()
+{
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.pNext = nullptr;
+    begin_info.pInheritanceInfo = VK_NULL_HANDLE;
+    begin_info.flags = (command_buffer_life == SECommandBufferLifeType::ExecuteOnce ? VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0);
+
+    vkBeginCommandBuffer(m_command_buffer, &begin_info);
+}
+
+void SCVulkanCommandBuffer::on_end_record()
+{
+    vkEndCommandBuffer(m_command_buffer);
+}
+
+void SCVulkanCommandBuffer::on_submit(const std::vector<SSRHICommandBufferWaitInfo>& InWaitInfo, const std::vector<SSRHICommandBufferTriggerInfo>& InTriggerInfo)
+{
+    auto&& loc_rhi = rhi.lock();
+    VkSubmitInfo submit_info{};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &m_command_buffer;
+    submit_info.pNext = nullptr;
+
+    std::vector<VkPipelineStageFlags> stage_masks;
+    stage_masks.reserve(InWaitInfo.size());
+    std::vector<VkSemaphore> stage_semaphores;
+    stage_semaphores.reserve(InWaitInfo.size());
+
+    for(auto&& waits : InWaitInfo)
+    {
+        stage_masks.push_back(waits.m_flags);
+        stage_semaphores.push_back(waits.m_semaphore.as<SCRHIVulkanDeviceSemaphore>()->GetInnerSemaphore());
+    }
+    submit_info.waitSemaphoreCount = stage_masks.size();
+    if(submit_info.waitSemaphoreCount > 0)
+    {
+        submit_info.pWaitDstStageMask = stage_masks.data();
+        submit_info.pWaitSemaphores = stage_semaphores.data();
+    }
+    else
+    {
+        submit_info.pWaitDstStageMask = nullptr;
+        submit_info.pWaitSemaphores = nullptr;
+    }
+
+    std::vector<VkSemaphore> trigger_semaphores;
+    trigger_semaphores.reserve(InTriggerInfo.size());
+    for(auto&& trigger : InTriggerInfo)
+    {
+        trigger_semaphores.push_back(trigger.m_semaphore.as<SCRHIVulkanDeviceSemaphore>()->GetInnerSemaphore());
+    }
+
+    submit_info.signalSemaphoreCount = trigger_semaphores.size();
+    if(submit_info.signalSemaphoreCount > 0)
+    {
+        submit_info.pSignalSemaphores = trigger_semaphores.data();
+    }
+    else
+    {
+        submit_info.pSignalSemaphores = nullptr;
+    }
+    vkQueueSubmit(loc_rhi->get_graphics_queue(), 1, &submit_info, m_fence->GetInnerFence());
+}
+
+void SCVulkanCommandBuffer::wait_until_finish(uint64_t InOutTime)
+{
+    if(get_status() == SECommandBufferStatus::Pending)
+    {
+        auto&& loc_rhi = rhi.lock();
+        vkWaitForFences(loc_rhi->get_device(), 1, &m_fence->GetInnerFence(), VK_TRUE, InOutTime);
+        CheckStatus();
+    }
+}
+
+void SCVulkanCommandBuffer::uninit()
+{
+    unint_internal();
+}
+
+void SCVulkanCommandBuffer::unint_internal()
+{
+    if(op)
+    {
+        auto&& loc_rhi = rhi.lock();
+        vkWaitForFences(loc_rhi->get_device(), 1, &m_fence->GetInnerFence(), VK_TRUE, 0xffffffffffffffffull);
+        vkResetCommandBuffer(m_command_buffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+        m_command_buffer = VK_NULL_HANDLE;
+        auto* top = op;
+        m_fence = nullptr;
+        Fence = nullptr;
+    	op = nullptr;
+        top->erase(it);
+
+    }
+    
+}
 
 void SCVulkanRHI::internal_uninit()
 {
@@ -16,6 +177,13 @@ void SCVulkanRHI::internal_uninit()
             m_status = SERHIStatus::Uniniting;
 
             const bool b_should_destroy_present_pool = m_graphics_command_pool != m_present_command_pool;
+
+            auto temp = m_command_buffers;
+            for(auto&& cb : temp)
+            {
+                cb->wait_until_finish();
+                cb->uninit();
+            }
 
             if(m_graphics_command_pool != VK_NULL_HANDLE)
             {
@@ -49,6 +217,7 @@ SCVulkanRHI::~SCVulkanRHI()
 {
     internal_uninit();
 }
+
 
 void SCVulkanRHI::init()
 {
@@ -107,6 +276,7 @@ void SCVulkanRHI::init()
 
             VkPhysicalDeviceProperties physical_device_properties;
             vkGetPhysicalDeviceProperties(physical_device_to_use, &physical_device_properties);
+
 
             uint32_t physical_device_queue_family_count = 0;
             vkGetPhysicalDeviceQueueFamilyProperties(physical_device_to_use, &physical_device_queue_family_count, nullptr);
@@ -264,7 +434,7 @@ void SCVulkanRHI::init()
 
             VkCommandPoolCreateInfo graphics_command_pool_create_info{};
             graphics_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-            graphics_command_pool_create_info.flags = 0;
+            graphics_command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
             graphics_command_pool_create_info.pNext = nullptr;
             graphics_command_pool_create_info.queueFamilyIndex = queue_family_index_graphics_to_use;
 
@@ -274,7 +444,7 @@ void SCVulkanRHI::init()
             {
                 VkCommandPoolCreateInfo present_command_pool_create_info{};
                 present_command_pool_create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                present_command_pool_create_info.flags = 0;
+                present_command_pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
                 present_command_pool_create_info.pNext = nullptr;
                 present_command_pool_create_info.queueFamilyIndex = queue_family_index_presentation_to_use;
 
@@ -307,4 +477,19 @@ void SCVulkanRHI::uninit()
 SERHIStatus SCVulkanRHI::status() const
 {
     return m_status;
+}
+
+SSPtr<SCRHICommandBuffer> SCVulkanRHI::allocate_command_buffer()
+{
+    SSPtr<SCVulkanCommandBuffer> r = SSPtr<SCVulkanCommandBuffer>::construct<SCVulkanCommandBuffer>();
+    r->it = m_command_buffers.emplace(m_command_buffers.end(), r);
+    r->op = &m_command_buffers;
+    r->Init(SSPtr<SCRHIInterface>(this), SECommandBufferLifeType::ExecuteMulti);
+	SSPtr<SCRHICommandBuffer> ret = r;
+    return ret;
+}
+
+void SCVulkanRHI::reset_command_buffer(SSPtr<SCRHICommandBuffer>& InBuffer)
+{
+    InBuffer.as<SCVulkanCommandBuffer>()->uninit();
 }
