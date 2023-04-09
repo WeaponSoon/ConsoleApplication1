@@ -3,6 +3,7 @@
 
 #include "Core/RHI/RHIResource.h"
 #include "Core/RHI/RHITextureDefs.h"
+#include "Core/RHI/RHIBuffer.h"
 
 class SCRHITexture : public SCRHIResource
 {
@@ -14,7 +15,7 @@ public:
 	SSTextureUsageFlags get_texture_flags() const { return m_texture_usage_flags; }
 	SERHIPixelFormat get_pixel_format() const { return m_pixel_format; }
 	virtual std::vector<std::uint8_t> get_raw_data() const = 0;
-	virtual bool set_raw_data(const std::vector<std::uint8_t>& inData) = 0;
+	virtual bool set_raw_data(const std::vector<std::uint8_t>& inData, uint32_t inMipmapLevel) = 0;
 };
 
 struct SSRHITexture2DCreateInfo

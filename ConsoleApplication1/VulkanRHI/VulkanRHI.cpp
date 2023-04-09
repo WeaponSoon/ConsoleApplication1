@@ -156,7 +156,9 @@ void SCVulkanCommandBuffer::unint_internal()
         {
             vkWaitForFences(loc_rhi->get_device(), 1, &m_fence->GetInnerFence(), VK_TRUE, 0xffffffffffffffffull);
         }
+        
         vkResetCommandBuffer(m_command_buffer, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+        vkFreeCommandBuffers(loc_rhi->get_device(), loc_rhi->get_graphics_pool(), 1, &m_command_buffer);
         m_command_buffer = VK_NULL_HANDLE;
         auto* top = op;
         m_fence = nullptr;

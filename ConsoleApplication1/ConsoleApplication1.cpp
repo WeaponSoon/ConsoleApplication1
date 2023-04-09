@@ -81,12 +81,20 @@ int main()
     SSRHITexture2DCreateInfo ttc;
     ttc.inUsage = static_cast<SSTextureUsageFlags>(SERHITextureUsage::TU_SAMPLED_BIT | SERHITextureUsage::TU_TRANSFER_DST_BIT);
     ttc.inPixelFormat = SERHIPixelFormat::PF_R8G8B8A8_SNORM;
-    ttc.inWidth = 512;
-    ttc.inHeight = 512;
+    ttc.inWidth = 2;
+    ttc.inHeight = 2;
     ttc.inMipMapLevels = 1;
     ttc.inSampleCount = 1;
     ttc.inAccessType = SERHITextureAccessType::TAT_HOST_AND_DEVICE;
     tt->init(RHIInterface, ttc);
+
+    std::vector<uint8_t> texture_data
+    {
+        0,0,0,0,  0,0,0,0,
+        0,0,0,0,  0,0,0,0
+    };
+
+    tt->set_raw_data(texture_data,0);
 
     SSPtr<SCWindow> Win = SSPtr<SCWindow>::construct<SCWindow>();
     Win->init("hahaha", 500, 500);

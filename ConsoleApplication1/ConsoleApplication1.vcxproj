@@ -149,23 +149,29 @@
   <ItemGroup>
     <ClCompile Include="ConsoleApplication1.cpp" />
     <ClCompile Include="Core\Display\Window\Window.cpp" />
+    <ClCompile Include="Core\RHI\RHIBuffer.cpp" />
     <ClCompile Include="Core\RHI\RHIInterface.cpp" />
     <ClCompile Include="Core\RHI\RHIResource.cpp" />
     <ClCompile Include="Core\RHI\RHISurface.cpp" />
     <ClCompile Include="Core\RHI\RHITexture.cpp" />
+    <ClCompile Include="VulkanRHI\VulkanBuffer.cpp" />
     <ClCompile Include="VulkanRHI\VulkanRHI.cpp" />
     <ClCompile Include="VulkanRHI\VulkanSurface.cpp" />
+    <ClCompile Include="VulkanRHI\VulkanTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\CoreObject\Delegate.h" />
     <ClInclude Include="Core\CoreObject\SCObject.h" />
     <ClInclude Include="Core\Display\Window\Window.h" />
+    <ClInclude Include="Core\RHI\RHIBuffer.h" />
+    <ClInclude Include="Core\RHI\RHIBufferDefs.h" />
     <ClInclude Include="Core\RHI\RHIInterface.h" />
     <ClInclude Include="Core\RHI\RHIInterfaceDefs.h" />
     <ClInclude Include="Core\RHI\RHITextureDefs.h" />
     <ClInclude Include="Core\RHI\RHIResource.h" />
     <ClInclude Include="Core\RHI\RHISurface.h" />
     <ClInclude Include="Core\RHI\RHITexture.h" />
+    <ClInclude Include="VulkanRHI\VulkanBuffer.h" />
     <ClInclude Include="VulkanRHI\VulkanRHI.h" />
     <ClInclude Include="VulkanRHI\VulkanSurface.h" />
     <ClInclude Include="VulkanRHI\VulkanTexture.h" />

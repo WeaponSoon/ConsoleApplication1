@@ -210,6 +210,25 @@ enum class SERHIPixelFormat
     PF_ASTC_12x12_SRGB_BLOCK = 184,
 };
 
+inline std::tuple<int,int> GetPixelFormatBlockSizeAndPerBlockNumPixels(SERHIPixelFormat InFormat)
+{
+	switch (InFormat)
+	{
+	case SERHIPixelFormat::PF_R8G8B8A8_SNORM:
+        return std::make_tuple(4, 1);
+	default:
+        return std::make_tuple(0, 0);
+	}
+}
+
+enum class SERHITextureAspect
+{
+    TA_COLOR = 0x1,
+    TA_DEPTH = 0x2,
+    TA_STENCIL = 0x4
+};
+typedef SSEnumFlag SSRHITextureAspectFlags;
+
 class SCRHITextureHelper
 {
 public:

@@ -60,6 +60,15 @@
     <ClCompile Include="Core\RHI\RHITexture.cpp">
       <Filter>Core\RHI</Filter>
     </ClCompile>
+    <ClCompile Include="VulkanRHI\VulkanTexture.cpp">
+      <Filter>VulkanRHI</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\RHI\RHIBuffer.cpp">
+      <Filter>Core\RHI</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanRHI\VulkanBuffer.cpp">
+      <Filter>VulkanRHI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\CoreObject\SCObject.h">
@@ -97,6 +106,15 @@
     </ClInclude>
     <ClInclude Include="Core\RHI\RHIInterfaceDefs.h">
       <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\RHIBuffer.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RHI\RHIBufferDefs.h">
+      <Filter>Core\RHI</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanRHI\VulkanBuffer.h">
+      <Filter>VulkanRHI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,23 @@
 #include "VulkanRHI/VulkanRHI.h"
 
 
+class SCCopyBufferToImgCmd : public SCRHICommand
+{
+public:
+	SSRHITextureAspectFlags m_copy_aspects = static_cast<uint32_t>(SERHITextureAspect::TA_COLOR);
+	uint64_t m_buffer_offset = 0;
+	int32_t m_texture_offset[3] = { 0,0,0 };
+	uint32_t m_texture_extent[3] = { 0,0,0 };
+
+	uint32_t m_mipmap_level = 0;
+	uint32_t m_array_layer = 0;
+	uint32_t m_array_count = 1;
+
+	SSPtr<SCRHIBuffer> m_src_buffer;
+	SSPtr<SCRHITexture> m_dst_tex;
+};
+
+
 class SCVulkanTextureHelper
 {
 public:
@@ -23,7 +40,7 @@ class SCVulkanTexture2D : public SCRHITexture2D
 
 private:
 	SSSpinLock texture_lock;
-
+	VkExtent3D texture_extent;
 	SSPtr<SCVulkanRHI> vulkan_rhi;
 
 	VkImage m_vkimage = VK_NULL_HANDLE;
@@ -63,7 +80,8 @@ private:
 				return false;
 			}
 		}
-
+		texture_extent = VkExtent3D(inInfo.inWidth, inInfo.inHeight, 1);
+		
 		vulkan_rhi = rhi.as<SCVulkanRHI>();
 		VkImageCreateInfo vk_image_create_info{};
 		vk_image_create_info.sType = VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -141,6 +159,7 @@ private:
 			vulkan_rhi = nullptr;
 			return false;
 		}
+		m_pixel_format = inInfo.inPixelFormat;
 		return true;
 	}
 
@@ -150,10 +169,7 @@ public:
 		return {};
 	}
 
-	bool set_raw_data(const std::vector<std::uint8_t>& inData) override
-	{
-		return false;
-	}
+	bool set_raw_data(const std::vector<std::uint8_t>& inData, uint32_t inMipmapLevel) override;
 
 	bool init(SSPtr<SCRHIInterface> rhi, const SSRHITexture2DCreateInfo& inInfo) override
 	{
@@ -169,4 +185,7 @@ public:
 	{
 		internal_release();
 	}
+
+	VkImage get_inner() const { return m_vkimage; }
+	void transition_layout_for_copy(VkImageLayout inFrom, VkImageLayout inTarget, uint32_t inChangeMip, uint32_t inChangeMipCount, uint32_t inChangeBaseLayer, uint32_t inChangeLayerCount, SSRHITextureAspectFlags inChangeAspect);
 };

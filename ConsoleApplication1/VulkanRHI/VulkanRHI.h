@@ -52,6 +52,10 @@ public:
 
 	void unint_internal();
 
+	SSPtr<SCVulkanRHI> get_vulkan_rhi() const { return rhi.lock(); }
+
+	VkCommandBuffer get_internal_buffer() const { return m_command_buffer; }
+
 	~SCVulkanCommandBuffer() override
 	{
 		unint_internal();
