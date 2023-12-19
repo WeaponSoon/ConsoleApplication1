@@ -13,7 +13,7 @@ class SCRHIVulkanDeviceFence : public SCRHIDeviceFence
 	SSPtr<SCVulkanRHI> rhi;
 	VkFence m_fence = VK_NULL_HANDLE;
 public:
-	SCRHIVulkanDeviceFence(SSPtr<SCRHIInterface> InRhi);
+	void init(SSPtr<SCRHIInterface> InRhi);
 	~SCRHIVulkanDeviceFence() override;
 	bool IsReady() const override;
 	void Reset() override;
@@ -26,7 +26,7 @@ class SCRHIVulkanDeviceSemaphore : public SCRHIDeviceSemaphore
 	SSPtr<SCVulkanRHI> rhi;
 	VkSemaphore m_semaphore = VK_NULL_HANDLE;
 public:
-	SCRHIVulkanDeviceSemaphore(SSPtr<SCRHIInterface> InRhi);
+	void init(SSPtr<SCRHIInterface> InRhi);
 	~SCRHIVulkanDeviceSemaphore() override;
 
 	VkSemaphore GetInnerSemaphore() const { return m_semaphore; }

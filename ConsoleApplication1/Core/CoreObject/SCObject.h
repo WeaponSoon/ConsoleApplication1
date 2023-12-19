@@ -47,6 +47,33 @@ bool operator!=(const TypeName&) const { return false; } \
 private:
 
 
+template<typename T, typename Ret, typename...Args>
+struct has_init
+{
+	template<typename C, Ret(C::*)(Args...) = &C::init>
+	static constexpr bool Check(C*) { return true; }
+	static constexpr bool Check(...) { return false; }
+
+	enum
+	{
+		value = Check((T*)nullptr),
+	};
+};
+
+template<typename T, typename Ret, typename...Args>
+struct has_release
+{
+	template<typename C, Ret(C::*)(Args...) = &C::release>
+	static constexpr bool Check(C*) { return true; }
+	static constexpr bool Check(...) { return false; }
+
+	enum
+	{
+		value = Check((T*)nullptr),
+	};
+};
+
+
 struct SSMutexLock
 {
 private:
@@ -131,8 +158,16 @@ class is_a_sc : public std::is_convertible<typename std::decay<T>::type*, SCBase
 
 };
 
+enum class SEObjectLiftStatus
+{
+	NotInited,
+	Inited,
+	Released
+};
+
 class SCObject : public virtual SCBase
 {
+	SEObjectLiftStatus ObjectStatus = SEObjectLiftStatus::NotInited;
 public:
 	virtual ~SCObject() = default;
 };
@@ -230,12 +265,27 @@ public:
 	}
 
 	template<typename Convertible, typename...ParamType>
-	static SSPtr<T> construct(ParamType...args)
+	static typename std::enable_if<has_init<Convertible,void, ParamType...>::value, SSPtr<T>>::type construct(ParamType...args)
 	{
 		static_assert(is_a_sc<T>::value && is_a_sc<Convertible>::value, "T must be a SCBase");
 		static_assert(std::is_base_of<T, Convertible>::value || std::is_same<T, Convertible>::value, "connot convert");
 		SSPtr<T> ret;
-		ret.impl = std::dynamic_pointer_cast<T>(std::make_shared<Convertible>(args...));
+		std::shared_ptr<Convertible> cvtb = std::make_shared<Convertible>();
+		cvtb->init(args...);
+		ret.impl = std::dynamic_pointer_cast<T>(cvtb);
+		return ret;
+	}
+
+
+
+	template<typename Convertible, typename...ParamType>
+	static typename std::enable_if<!has_init<Convertible, void, ParamType...>::value, SSPtr<T>>::type construct(ParamType...args)
+	{
+		static_assert(is_a_sc<T>::value && is_a_sc<Convertible>::value, "T must be a SCBase");
+		static_assert(std::is_base_of<T, Convertible>::value || std::is_same<T, Convertible>::value, "connot convert");
+		SSPtr<T> ret;
+		std::shared_ptr<Convertible> cvtb = std::make_shared<Convertible>();
+		ret.impl = std::dynamic_pointer_cast<T>(cvtb);
 		return ret;
 	}
 

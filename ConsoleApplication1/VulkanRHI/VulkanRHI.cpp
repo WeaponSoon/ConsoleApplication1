@@ -6,7 +6,7 @@
 #include "GLFW/glfw3.h"
 
 
-SCRHIVulkanDeviceFence::SCRHIVulkanDeviceFence(SSPtr<SCRHIInterface> InRhi)
+void SCRHIVulkanDeviceFence::init(SSPtr<SCRHIInterface> InRhi)
 {
     rhi = InRhi.as<SCVulkanRHI>();
     VkFenceCreateInfo fence_create{};
@@ -31,7 +31,7 @@ void SCRHIVulkanDeviceFence::Reset()
     vkResetFences(rhi->get_device(), 1, &m_fence);
 }
 
-SCRHIVulkanDeviceSemaphore::SCRHIVulkanDeviceSemaphore(SSPtr<SCRHIInterface> InRhi)
+void SCRHIVulkanDeviceSemaphore::init(SSPtr<SCRHIInterface> InRhi)
 {
     rhi = InRhi.as<SCVulkanRHI>();
     VkSemaphoreCreateInfo info;
