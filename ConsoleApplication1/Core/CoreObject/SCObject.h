@@ -2,6 +2,7 @@
 #include <istream>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #ifndef SM_DEBUG
 #ifdef _DEBUG
