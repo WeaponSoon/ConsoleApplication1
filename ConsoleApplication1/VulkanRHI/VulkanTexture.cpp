@@ -100,9 +100,21 @@ class SCVulkanCopyBufferToImage2DCmd : public SCCopyBufferToImgCmd
 
 bool SCVulkanTexture2D::set_raw_data(const std::vector<std::uint8_t>& inData, uint32_t inMipmapLevel)
 {
-    transition_layout_for_copy(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, inMipmapLevel, 1, 0, 1, static_cast<SSRHITextureAspectFlags>(SERHITextureAspect::TA_COLOR));
+    //transition_layout_for_copy(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, inMipmapLevel, 1, 0, 1, static_cast<SSRHITextureAspectFlags>(SERHITextureAspect::TA_COLOR));
+
+    //VkImageViewCreateInfo view_create_info;
+    //view_create_info.viewType;
+
+    if(m_texture_usage != SERHITextureUsage::TU_ShaderResource)
+    {
+        return false;
+    }
 
     SSPtr<SCVulkanCopyBufferToImage2DCmd> cmd = SSPtr<SCVulkanCopyBufferToImage2DCmd>::construct<SCVulkanCopyBufferToImage2DCmd>();
+
+    VkMemoryRequirements memory_requirements;
+    vkGetImageMemoryRequirements(vulkan_rhi->get_device(), m_vkimage, &memory_requirements);
+
     cmd->m_dst_tex = this;
     cmd->m_mipmap_level = inMipmapLevel;
     cmd->m_array_layer = 0;
@@ -113,14 +125,16 @@ bool SCVulkanTexture2D::set_raw_data(const std::vector<std::uint8_t>& inData, ui
     cmd->m_texture_offset[1] = 0;
     cmd->m_texture_offset[2] = 0;
 
-	cmd->m_texture_extent[0] = texture_extent.width;
-    cmd->m_texture_extent[1] = texture_extent.height;
+    auto&& sizeAtMip = GetSizeAtMipLevel(texture_extent.width, texture_extent.height, inMipmapLevel);
+
+	cmd->m_texture_extent[0] = std::get<0>(sizeAtMip);
+    cmd->m_texture_extent[1] = std::get<1>(sizeAtMip);
     cmd->m_texture_extent[2] = 1;
     
     SSPtr<SCRHIBuffer> buff = SSPtr<SCRHIBuffer>::construct<SCVulkanBuffer>();
     SSRHIBufferCreateInfo inf;
     auto&& ie = GetPixelFormatBlockSizeAndPerBlockNumPixels(m_pixel_format);
-    inf.size = texture_extent.height * texture_extent.width * std::get<0>(ie) / std::get<1>(ie);
+    inf.size = CalcTextureSizeInByte(texture_extent.height, texture_extent.width, m_pixel_format, inMipmapLevel);// *std::get<0>(ie) / std::get<1>(ie);
     inf.Usage = BU_BUFFER_USAGE_TRANSFER_SRC_BIT;
     inf.hostVisible = true;
     buff->init(vulkan_rhi.as<SCRHIInterface>(), inf);
@@ -128,9 +142,23 @@ bool SCVulkanTexture2D::set_raw_data(const std::vector<std::uint8_t>& inData, ui
 
     cmd->m_src_buffer = buff;
 
+    SSPtr<SCT2DLayoutTransientCmd> transition_cmd = SSPtr<SCT2DLayoutTransientCmd>::construct<SCT2DLayoutTransientCmd>();
+    transition_cmd->m_src = VK_IMAGE_LAYOUT_UNDEFINED;
+    transition_cmd->m_dst = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    transition_cmd->m_target = this;
+    transition_cmd->m_mipmap_level = inMipmapLevel;
+    transition_cmd->m_mip_count = 1;
+    transition_cmd->m_array_layer = 0;
+    transition_cmd->m_array_count = 1;
+    transition_cmd->m_src_stage = RHI_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    transition_cmd->m_dst_stage = SERHIPipelineStageFlagBits::RHI_PIPELINE_STAGE_TRANSFER_BIT;
+    transition_cmd->m_copy_aspects = static_cast<SSRHITextureAspectFlags>(SERHITextureAspect::TA_COLOR);
+
+
     auto&& cmd_buffer = vulkan_rhi->allocate_command_buffer(SECommandBufferLifeType::ExecuteOnce);
     cmd_buffer->begin_record();
 
+    cmd_buffer->record_command(transition_cmd);
     cmd_buffer->record_command(cmd);
 
     cmd_buffer->end_record();

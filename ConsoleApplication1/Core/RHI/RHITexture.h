@@ -9,10 +9,10 @@ class SCRHITexture : public SCRHIResource
 {
 protected:
 	SERHIPixelFormat m_pixel_format = SERHIPixelFormat::PF_UNDEFINED;
-	SSTextureUsageFlags m_texture_usage_flags = 0;
+	SERHITextureUsage m_texture_usage = SERHITextureUsage::TU_ShaderResource;
 
 public:
-	SSTextureUsageFlags get_texture_flags() const { return m_texture_usage_flags; }
+	SERHITextureUsage get_texture_flags() const { return m_texture_usage; }
 	SERHIPixelFormat get_pixel_format() const { return m_pixel_format; }
 	virtual std::vector<std::uint8_t> get_raw_data() const = 0;
 	virtual bool set_raw_data(const std::vector<std::uint8_t>& inData, uint32_t inMipmapLevel) = 0;
@@ -24,8 +24,9 @@ struct SSRHITexture2DCreateInfo
 	std::uint16_t inHeight = 1;
 	std::uint16_t inSampleCount = 1;
 	std::uint16_t inMipMapLevels = 1;
+
 	SERHITextureAccessType inAccessType = SERHITextureAccessType::TAT_DEVICE;
-	SSTextureUsageFlags inUsage = static_cast<SSTextureUsageFlags>(SERHITextureUsage::TU_SAMPLED_BIT);
+	SERHITextureUsage inUsage = SERHITextureUsage::TU_ShaderResource;
 
 	SERHIPixelFormat inPixelFormat = SERHIPixelFormat::PF_UNDEFINED;
 };

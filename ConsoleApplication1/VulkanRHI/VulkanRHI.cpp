@@ -224,6 +224,17 @@ SCVulkanRHI::~SCVulkanRHI()
 }
 
 
+static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+
+    printf("%s\n", pCallbackData->pMessage);
+
+    return VK_FALSE;
+}
+
 void SCVulkanRHI::init()
 {
     if(m_status == SERHIStatus::NotInit)
@@ -249,15 +260,37 @@ void SCVulkanRHI::init()
             uint32_t instance_extension_count = 0;
             const char** instance_extensions = glfwGetRequiredInstanceExtensions(&instance_extension_count);
 
+            std::vector<const char*> final_instance_extensions;
+            final_instance_extensions.reserve(instance_extension_count + 1);
+            for(int ei = 0; ei < instance_extension_count; ++ei)
+            {
+                final_instance_extensions.push_back(instance_extensions[ei]);
+            }
+#if SM_DEBUG
+            final_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+            VkDebugUtilsMessengerCreateInfoEXT debugUtilsCreateInfo = {};
+            debugUtilsCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+            debugUtilsCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+            debugUtilsCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            debugUtilsCreateInfo.pfnUserCallback = vulkanDebugCallback;
+            debugUtilsCreateInfo.pUserData = nullptr; // Optional user data
+
+#endif
             VkInstanceCreateInfo vk_instance_create_info;
             vk_instance_create_info.pNext = nullptr;
             vk_instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-            vk_instance_create_info.enabledExtensionCount = instance_extension_count;
-            vk_instance_create_info.ppEnabledExtensionNames = instance_extensions;
+            vk_instance_create_info.enabledExtensionCount = final_instance_extensions.size();
+            vk_instance_create_info.ppEnabledExtensionNames = final_instance_extensions.data();
 #if SM_DEBUG
             std::vector<const char*> validit_layers = {
                 "VK_LAYER_KHRONOS_validation"
             };
+            vk_instance_create_info.pNext = &debugUtilsCreateInfo;
             vk_instance_create_info.enabledLayerCount = validit_layers.size();
             vk_instance_create_info.ppEnabledLayerNames = validit_layers.data();
 #else

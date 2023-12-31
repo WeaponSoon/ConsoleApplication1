@@ -1,19 +1,16 @@
 #pragma once
+#include <map>
+
 #include "Core/CoreObject/SCObject.h"
 
-enum SERHITextureUsage
+enum class SERHITextureUsage
 {
-    TU_TRANSFER_SRC_BIT = 0x00000001,
-    TU_TRANSFER_DST_BIT = 0x00000002,
-    TU_SAMPLED_BIT = 0x00000004,
-    TU_STORAGE_BIT = 0x00000008,
-    TU_COLOR_ATTACHMENT_BIT = 0x00000010,
-    TU_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000020,
-    TU_TRANSIENT_ATTACHMENT_BIT = 0x00000040,
-    TU_INPUT_ATTACHMENT_BIT = 0x00000080,
+    TU_RenderTargetColor,
+    TU_RenderTargetDepthStencil,
+    TU_RenderTargetDepthResource,
+    TU_ShaderResource,
+    TU_UnorderedAccess,
 };
-
-typedef SSEnumFlag SSTextureUsageFlags;
 
 enum class SERHITextureAccessType
 {
@@ -210,16 +207,62 @@ enum class SERHIPixelFormat
     PF_ASTC_12x12_SRGB_BLOCK = 184,
 };
 
-inline std::tuple<int,int> GetPixelFormatBlockSizeAndPerBlockNumPixels(SERHIPixelFormat InFormat)
+struct SSTextureBlockDesc
 {
-	switch (InFormat)
-	{
-	case SERHIPixelFormat::PF_R8G8B8A8_SNORM:
-        return std::make_tuple(4, 1);
-	default:
-        return std::make_tuple(0, 0);
-	}
+    int sizePerBlock = 0;
+    int numCollumePerBlock = 0;
+    int numRowPerBlock = 0;
+    SSTextureBlockDesc() = default;
+    SSTextureBlockDesc(const SSTextureBlockDesc&) = default;
+    SSTextureBlockDesc(const std::pair<int, int>& inPair) : sizePerBlock(inPair.first), numCollumePerBlock(inPair.second), numRowPerBlock(inPair.second) {}
+    SSTextureBlockDesc(const std::tuple<int, int, int>& inTuple) : sizePerBlock(std::get<0>(inTuple)), numCollumePerBlock(std::get<1>(inTuple)), numRowPerBlock(std::get<2>(inTuple)) {}
+
+};
+
+extern std::map<SERHIPixelFormat, SSTextureBlockDesc> SCIformatSizeMap;
+
+inline SSTextureBlockDesc GetPixelFormatBlockSizeAndPerBlockNumPixels(SERHIPixelFormat InFormat)
+{
+
+
+    {
+        auto&& res = SCIformatSizeMap.find(InFormat);
+        if(res != SCIformatSizeMap.end())
+        {
+            return res->second;
+        }
+        return {};
+    }
 }
+
+inline std::tuple<int,int> FixTextureSize(int X, int Y, SERHIPixelFormat Format)
+{
+	if(Format <= SERHIPixelFormat::PF_D32_SFLOAT_S8_UINT)//non-compress format
+	{
+        return std::make_tuple(X, Y);
+	}
+    if(Format <= SERHIPixelFormat::PF_EAC_R11G11_SNORM_BLOCK)//BC1 to BC7 and ETC2
+    {
+        return std::make_tuple((X + 3) / 4 * 4, (Y + 3) / 4 * 4);
+    }
+    return std::make_tuple(X, Y); //ASTC
+}
+
+inline std::tuple<int, int> GetSizeAtMipLevel(int baseWidth, int baseHeight, int mipLevel)
+{
+    int width = std::max(1, baseWidth >> mipLevel);
+    int height = std::max(1, baseHeight >> mipLevel);
+
+    return std::make_tuple(width, height);
+}
+
+inline int CalcTextureSizeInByte(int X, int Y, SERHIPixelFormat Format, int Mip)
+{
+    auto&& s = GetSizeAtMipLevel(X, Y, Mip);
+    auto&& r = GetPixelFormatBlockSizeAndPerBlockNumPixels(Format);
+    return (std::get<0>(s) + r.numCollumePerBlock - 1) / r.numCollumePerBlock * (std::get<1>(s) + r.numRowPerBlock - 1) / r.numRowPerBlock * r.sizePerBlock;
+}
+
 
 enum class SERHITextureAspect
 {
@@ -232,8 +275,5 @@ typedef SSEnumFlag SSRHITextureAspectFlags;
 class SCRHITextureHelper
 {
 public:
-    static bool is_host_accessable(SSTextureUsageFlags inUsage)
-    {
-        return !(inUsage & (TU_COLOR_ATTACHMENT_BIT & TU_DEPTH_STENCIL_ATTACHMENT_BIT & TU_INPUT_ATTACHMENT_BIT & TU_TRANSIENT_ATTACHMENT_BIT));
-    }
+
 };
