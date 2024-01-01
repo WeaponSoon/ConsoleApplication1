@@ -235,6 +235,42 @@ inline SSTextureBlockDesc GetPixelFormatBlockSizeAndPerBlockNumPixels(SERHIPixel
     }
 }
 
+inline bool ContainsDepth(SERHIPixelFormat Format)
+{
+	switch (Format)
+	{
+	case SERHIPixelFormat::PF_D16_UNORM:
+	case SERHIPixelFormat::PF_X8_D24_UNORM_PACK32:
+	case SERHIPixelFormat::PF_D32_SFLOAT:
+    case SERHIPixelFormat::PF_D16_UNORM_S8_UINT:
+	case SERHIPixelFormat::PF_D24_UNORM_S8_UINT:
+	case SERHIPixelFormat::PF_D32_SFLOAT_S8_UINT:
+        return true;
+	default:
+        return false;
+	}
+}
+
+inline bool ContainsStencil(SERHIPixelFormat Format)
+{
+    switch (Format)
+    {
+    case SERHIPixelFormat::PF_S8_UINT:
+    case SERHIPixelFormat::PF_D16_UNORM_S8_UINT:
+    case SERHIPixelFormat::PF_D24_UNORM_S8_UINT:
+    case SERHIPixelFormat::PF_D32_SFLOAT_S8_UINT:
+        return true;
+    default:
+        return false;
+    }
+}
+inline unsigned int NearestPowerOfTwo(unsigned int num) {
+    int exponent = static_cast<int>(std::floor(std::log2(num)));
+    return static_cast<unsigned int>(std::pow(2, exponent));
+}
+inline uint32_t GetMaxMipLevels(uint32_t width, uint32_t height) {
+    return static_cast<uint32_t>(std::floor(std::log2(std::max({ width, height })))) + 1;
+}
 inline std::tuple<int,int> FixTextureSize(int X, int Y, SERHIPixelFormat Format)
 {
 	if(Format <= SERHIPixelFormat::PF_D32_SFLOAT_S8_UINT)//non-compress format
@@ -260,6 +296,20 @@ inline int CalcTextureSizeInByte(int X, int Y, SERHIPixelFormat Format, int Mip)
 {
     auto&& s = GetSizeAtMipLevel(X, Y, Mip);
     auto&& r = GetPixelFormatBlockSizeAndPerBlockNumPixels(Format);
+
+    /*switch (Format)
+    {
+    case SERHIPixelFormat::PF_X8_D24_UNORM_PACK32:
+    case SERHIPixelFormat::PF_D16_UNORM_S8_UINT:
+    case SERHIPixelFormat::PF_D24_UNORM_S8_UINT:
+    case SERHIPixelFormat::PF_D32_SFLOAT_S8_UINT:
+    case SERHIPixelFormat::PF_S8_UINT:
+        r.sizePerBlock -= 1;
+        break;
+    default:
+        ;
+    }*/
+
     return (std::get<0>(s) + r.numCollumePerBlock - 1) / r.numCollumePerBlock * (std::get<1>(s) + r.numRowPerBlock - 1) / r.numRowPerBlock * r.sizePerBlock;
 }
 

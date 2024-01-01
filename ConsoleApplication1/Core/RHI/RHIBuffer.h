@@ -20,5 +20,6 @@ protected:
 public:
 	virtual void init(const SSPtr<SCRHIInterface>& inInterface, SSRHIBufferCreateInfo& createInfo) = 0;
 	virtual void set_data(const std::vector<uint8_t>& inData) = 0;
+	virtual void get_data(std::vector<uint8_t>& outData) = 0;
 	virtual void release() = 0;
 };

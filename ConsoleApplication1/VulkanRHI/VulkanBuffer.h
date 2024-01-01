@@ -11,6 +11,7 @@ protected:
 public:
 	void init(const SSPtr<SCRHIInterface>& inInterface, SSRHIBufferCreateInfo& createInfo) override;
 	virtual void set_data(const std::vector<uint8_t>& inData) override;
+	void get_data(std::vector<uint8_t>& outData) override;
 	void release() override { unint_internal(); }
 	void unint_internal();
 

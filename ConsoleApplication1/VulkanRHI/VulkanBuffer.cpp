@@ -63,6 +63,19 @@ void SCVulkanBuffer::set_data(const std::vector<uint8_t>& inData)
     //buffer_memory.
 }
 
+void SCVulkanBuffer::get_data(std::vector<uint8_t>& outData)
+{
+    auto&& loc_rhi = vulkan_rhi.lock();
+    if (hostVisible)
+    {
+        outData.resize(size);
+        void* data = nullptr;
+        vkMapMemory(loc_rhi->get_device(), m_memory, 0, size, 0, &data);
+        memcpy(outData.data(), data , size);
+        vkUnmapMemory(loc_rhi->get_device(), m_memory);
+    }
+}
+
 void SCVulkanBuffer::unint_internal()
 {
     auto&& loc_rhi = vulkan_rhi.lock();

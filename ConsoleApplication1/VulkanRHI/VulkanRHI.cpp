@@ -230,7 +230,24 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
 
-    printf("%s\n", pCallbackData->pMessage);
+    const char* Level = "";
+    switch(messageSeverity)
+    {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        Level = "Verbose";
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+        Level = "Info";
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        Level = "Warning";
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+        Level = "Error";
+        break;
+    }
+
+    printf("%s: %s\n", Level, pCallbackData->pMessage);
 
     return VK_FALSE;
 }

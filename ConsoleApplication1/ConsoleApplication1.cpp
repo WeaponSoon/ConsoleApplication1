@@ -79,8 +79,8 @@ int main()
 
     SSPtr<SCRHITexture2D> tt = SSPtr<SCRHITexture2D>::construct<SCVulkanTexture2D>();
     SSRHITexture2DCreateInfo ttc;
-    ttc.inUsage = SERHITextureUsage::TU_ShaderResource;
-    ttc.inPixelFormat = SERHIPixelFormat::PF_R8G8B8A8_SNORM;
+    ttc.inUsage = SERHITextureUsage::TU_RenderTargetDepthResource;
+    ttc.inPixelFormat = SERHIPixelFormat::PF_D24_UNORM_S8_UINT;
     ttc.inWidth = 2;
     ttc.inHeight = 2;
     ttc.inSampleCount = 1;
@@ -88,20 +88,25 @@ int main()
     ttc.inAccessType = SERHITextureAccessType::TAT_HOST_AND_DEVICE;
     tt->init(RHIInterface, ttc);
 
+
+
     std::vector<uint8_t> texture_data
     {
-        0,0,0,0,  0,0,0,0,
-        0,0,0,0,  0,0,0,0
+        0,1,2,3,4,5,6,7, 8,9,10,11,12,13,14,15,
+        7,6,5,4,3,2,1,0, 0,1,2,3,4,5,6,7,
     };
 
     std::vector<uint8_t> texture_data1
     {
-        0,0,0,0
+        0,0,0,0,0,0,0,0,
     };
 
 
     tt->set_raw_data(texture_data,0);
     tt->set_raw_data(texture_data, 1);
+
+    std::vector<uint8_t> out_texture_data;
+    tt->get_raw_data(out_texture_data, 0);
 
     SSPtr<SCWindow> Win = SSPtr<SCWindow>::construct<SCWindow>();
     Win->init("hahaha", 500, 500);

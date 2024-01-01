@@ -10,12 +10,17 @@ class SCRHITexture : public SCRHIResource
 protected:
 	SERHIPixelFormat m_pixel_format = SERHIPixelFormat::PF_UNDEFINED;
 	SERHITextureUsage m_texture_usage = SERHITextureUsage::TU_ShaderResource;
-
+	SERHITextureAccessType m_access_type = SERHITextureAccessType::TAT_DEVICE;
+	std::uint16_t m_width = 0;
+	std::uint16_t m_height = 0;
+	std::uint16_t m_sample_count = 1;
+	std::uint16_t m_mipmap = 1;
 public:
 	SERHITextureUsage get_texture_flags() const { return m_texture_usage; }
 	SERHIPixelFormat get_pixel_format() const { return m_pixel_format; }
 	virtual std::vector<std::uint8_t> get_raw_data() const = 0;
 	virtual bool set_raw_data(const std::vector<std::uint8_t>& inData, uint32_t inMipmapLevel) = 0;
+	virtual bool get_raw_data(std::vector<std::uint8_t>& outData, uint32_t inMipmapLevel) = 0;
 };
 
 struct SSRHITexture2DCreateInfo
