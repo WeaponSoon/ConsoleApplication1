@@ -60,10 +60,10 @@ struct has_init
 	};
 };
 
-template<typename T, typename Ret, typename...Args>
+template<typename T, typename Ret>
 struct has_release
 {
-	template<typename C, Ret(C::*)(Args...) = &C::release>
+	template<typename C, Ret(C::*)() = &C::release>
 	static constexpr bool Check(C*) { return true; }
 	static constexpr bool Check(...) { return false; }
 

@@ -101,7 +101,7 @@ void SCVulkanCommandBuffer::on_submit(const std::vector<SSRHICommandBufferWaitIn
         stage_masks.push_back(waits.m_flags);
         stage_semaphores.push_back(waits.m_semaphore.as<SCRHIVulkanDeviceSemaphore>()->GetInnerSemaphore());
     }
-    submit_info.waitSemaphoreCount = stage_masks.size();
+    submit_info.waitSemaphoreCount = static_cast<uint32_t>(stage_masks.size());
     if(submit_info.waitSemaphoreCount > 0)
     {
         submit_info.pWaitDstStageMask = stage_masks.data();
@@ -120,7 +120,7 @@ void SCVulkanCommandBuffer::on_submit(const std::vector<SSRHICommandBufferWaitIn
         trigger_semaphores.push_back(trigger.m_semaphore.as<SCRHIVulkanDeviceSemaphore>()->GetInnerSemaphore());
     }
 
-    submit_info.signalSemaphoreCount = trigger_semaphores.size();
+    submit_info.signalSemaphoreCount = static_cast<uint32_t>(trigger_semaphores.size());
     if(submit_info.signalSemaphoreCount > 0)
     {
         submit_info.pSignalSemaphores = trigger_semaphores.data();
@@ -279,7 +279,7 @@ void SCVulkanRHI::init()
 
             std::vector<const char*> final_instance_extensions;
             final_instance_extensions.reserve(instance_extension_count + 1);
-            for(int ei = 0; ei < instance_extension_count; ++ei)
+            for(uint32_t ei = 0; ei < instance_extension_count; ++ei)
             {
                 final_instance_extensions.push_back(instance_extensions[ei]);
             }
@@ -301,14 +301,14 @@ void SCVulkanRHI::init()
             VkInstanceCreateInfo vk_instance_create_info;
             vk_instance_create_info.pNext = nullptr;
             vk_instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-            vk_instance_create_info.enabledExtensionCount = final_instance_extensions.size();
+            vk_instance_create_info.enabledExtensionCount = static_cast<uint32_t>(final_instance_extensions.size());
             vk_instance_create_info.ppEnabledExtensionNames = final_instance_extensions.data();
 #if SM_DEBUG
             std::vector<const char*> validit_layers = {
                 "VK_LAYER_KHRONOS_validation"
             };
             vk_instance_create_info.pNext = &debugUtilsCreateInfo;
-            vk_instance_create_info.enabledLayerCount = validit_layers.size();
+            vk_instance_create_info.enabledLayerCount = static_cast<uint32_t>(validit_layers.size());
             vk_instance_create_info.ppEnabledLayerNames = validit_layers.data();
 #else
             vk_instance_create_info.enabledLayerCount = 0;
@@ -400,7 +400,7 @@ void SCVulkanRHI::init()
                 if(queue_family_index_presentation_to_use != 0xffffffff)
                 {
                     device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-                    device_extension_count = device_extension_names.size();
+                    device_extension_count = static_cast<uint32_t>(device_extension_names.size());
                 }
 
                 VkDeviceCreateInfo vk_device_create_info;

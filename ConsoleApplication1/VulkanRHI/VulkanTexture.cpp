@@ -132,7 +132,7 @@ public:
         if(regions.size() > 0)
         {
             vkCmdCopyBufferToImage(inernal_buffer, vb->get_inner_buffer(), t2d->get_inner(),
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, regions.size(), regions.data());
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(regions.size()), regions.data());
         }
 	}
 };
@@ -197,7 +197,7 @@ public:
         if (regions.size() > 0)
         {
             vkCmdCopyImageToBuffer(inernal_buffer,  t2d->get_inner(),
-                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vb->get_inner_buffer(), regions.size(), regions.data());
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, vb->get_inner_buffer(), static_cast<uint32_t>(regions.size()), regions.data());
         }
     }
 };
